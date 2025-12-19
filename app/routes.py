@@ -22,3 +22,7 @@ def usersDetail(id):
         return UserController.update(id)
     elif request.method == 'DELETE':
         return UserController.delete(id)
+
+@bp.route('/login', methods=['POST'])
+def login():
+    return UserController.login()

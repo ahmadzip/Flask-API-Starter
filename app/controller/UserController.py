@@ -1,6 +1,8 @@
 from app.model import User
 from app import response, db
 from flask import request
+from flask_jwt_extended import create_access_token, create_refresh_token
+from datetime import timedelta
 
 def index():
     try:
@@ -86,3 +88,28 @@ def singleTransform(user):
         'email': user.email
     }
     return data
+
+def login():
+    try:
+        email = request.json['email']
+        password = request.json['password']
+
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return response.badRequest([], 'User not found')
+
+        if not user.check_password(password):
+            return response.badRequest([], 'Invalid password')
+
+        data = singleTransform(user)
+        expires = timedelta(days=1)
+        expires_refresh = timedelta(days=3)
+        access_token = create_access_token(data, expires_delta=expires)
+        refresh_token = create_refresh_token(data, expires_delta=expires_refresh)
+        return response.ok({
+            'access_token': access_token,
+            'refresh_token': refresh_token
+        }, "Login successful")
+    except Exception as e:
+        print(e)
+        return response.badRequest([], "Failed to login")
